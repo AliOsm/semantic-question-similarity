@@ -73,7 +73,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data-dir', default='data_dir')
   parser.add_argument('--embeddings-dir', default='embeddings_dir')
-  parser.add_argument('--model-path', default='checkpoints/epoch100.ckpt')
+  parser.add_argument('--model-path', default='checkpoints/epoch500.ckpt')
   args = parser.parse_args()
 
   embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding()

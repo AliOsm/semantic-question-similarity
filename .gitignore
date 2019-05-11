@@ -1,2 +1,4 @@
 __pycache__/
-embeddings_dir/
+embeddings_dir/model.*
+doc2vec_dir/model.*
+checkpoints/*.ckpt

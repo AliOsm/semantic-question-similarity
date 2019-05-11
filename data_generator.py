@@ -16,9 +16,9 @@ class DataGenerator(Sequence):
 
   def __getitem__(self, idx):
     q1_batch = np.array(self.q1[idx * self.batch_size:(idx + 1) * self.batch_size])
-    q1_word_batch, q1_char_batch = zip(*q1_batch)
+    q1_sent_batch, q1_word_batch, q1_char_batch = zip(*q1_batch)
     q2_batch = np.array(self.q2[idx * self.batch_size:(idx + 1) * self.batch_size])
-    q2_word_batch, q2_char_batch = zip(*q2_batch)
+    q2_sent_batch, q2_word_batch, q2_char_batch = zip(*q2_batch)
     Y_batch = np.array(self.Y[idx * self.batch_size:(idx + 1) * self.batch_size])
     
     q1_word_msl = np.max([len(x) for x in q1_word_batch])
@@ -54,4 +54,5 @@ class DataGenerator(Sequence):
       q2_char_new.append(np.array(x_new))
     q2_char_batch = q2_char_new
 
-    return [np.array(q1_word_batch), np.array(q1_char_batch), np.array(q2_word_batch), np.array(q2_char_batch)], np.array(Y_batch)
+    return [np.array(q1_sent_batch), np.array(q1_word_batch), np.array(q1_char_batch), np.array(q2_sent_batch), np.array(q2_word_batch), np.array(q2_char_batch)], np.array(Y_batch)
+    

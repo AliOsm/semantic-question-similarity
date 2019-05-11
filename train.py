@@ -9,12 +9,18 @@ import keras.backend as K
 
 from os.path import join
 from gensim.models import FastText
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from keras.models import Input, Model
 from keras.layers import Concatenate, Embedding, Dropout, Dense, LSTM, CuDNNLSTM, Bidirectional
 from keras.optimizers import Adam, Nadam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, Callback
+from keras_self_attention import SeqWeightedAttention
 
 from data_generator import DataGenerator
+
+def load_doc2vec_model():
+  model = Doc2Vec.load(join(args.doc2vec_dir, 'model'))
+  return model
 
 def load_fasttext_embedding():
   model = FastText.load(join(args.embeddings_dir, 'model'))
@@ -46,7 +52,7 @@ def load_characters_mapping():
 
   return characters_mapping
 
-def map_sentence(sentence, word2index, char2index):
+def map_sentence(sentence, doc2vec_model, word2index, char2index):
   word_ints = [word2index['<SOS>']]
   for word in sentence.split():
     word_ints.append(word2index[word])
@@ -57,27 +63,30 @@ def map_sentence(sentence, word2index, char2index):
     char_ints.append(char2index[char])
   char_ints.append(char2index['<EOS>'])
 
-  return word_ints, char_ints
+  return doc2vec_model.infer_vector(sentence.split()), word_ints, char_ints
 
 def f1(y_true, y_pred):
-  def recall(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    return recall
-
   def precision(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
 
+  def recall(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
   precision = precision(y_true, y_pred)
   recall = recall(y_true, y_pred)
   return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
-def build_model(embeddings_matrix, words_num, chars_num):
+def build_model(embeddings_matrix, doc2vec_size, words_num, chars_num):
   # Inputs
+  q1_sent_input = Input(shape=(doc2vec_size,))
+  q2_sent_input = Input(shape=(doc2vec_size,))
+
   q1_word_input = Input(shape=(None,))
   q2_word_input = Input(shape=(None,))
 
@@ -100,18 +109,24 @@ def build_model(embeddings_matrix, words_num, chars_num):
 
   # LSTM
   word_lstm1 = Bidirectional(
-    LSTM(units=128, dropout=args.dropout_rate, return_sequences=False, kernel_initializer='glorot_normal')
+    LSTM(units=128, dropout=args.dropout_rate, return_sequences=True, kernel_initializer='glorot_normal')
   )
-  q1_word_lstm1 = word_lstm1(q1_word_embedding)
-  q2_word_lstm1 = word_lstm1(q2_word_embedding)
+  word_attention = SeqWeightedAttention()
+  q1_word_lstm1 = word_attention(word_lstm1(q1_word_embedding))
+  q2_word_lstm1 = word_attention(word_lstm1(q2_word_embedding))
 
   char_lstm1 = Bidirectional(
-    LSTM(units=128, dropout=args.dropout_rate, return_sequences=False, kernel_initializer='glorot_normal')
+    LSTM(units=128, dropout=args.dropout_rate, return_sequences=True, kernel_initializer='glorot_normal')
   )
-  q1_char_lstm1 = char_lstm1(q1_char_embedding)
-  q2_char_lstm1 = char_lstm1(q2_char_embedding)
+  char_attention = SeqWeightedAttention()
+  q1_char_lstm1 = char_attention(char_lstm1(q1_char_embedding))
+  q2_char_lstm1 = char_attention(char_lstm1(q2_char_embedding))
 
   # Dense
+  sent_dense1 = Dense(units=256, activation='relu', kernel_initializer='glorot_normal')
+  q1_sent_dense1 = Dropout(args.dropout_rate)(sent_dense1(q1_sent_input))
+  q2_sent_dense1 = Dropout(args.dropout_rate)(sent_dense1(q2_sent_input))
+
   word_dense1 = Dense(units=256, activation='relu', kernel_initializer='glorot_normal')
   q1_word_dense1 = Dropout(args.dropout_rate)(word_dense1(q1_word_lstm1))
   q2_word_dense1 = Dropout(args.dropout_rate)(word_dense1(q2_word_lstm1))
@@ -121,8 +136,8 @@ def build_model(embeddings_matrix, words_num, chars_num):
   q2_char_dense1 = Dropout(args.dropout_rate)(char_dense1(q2_char_lstm1))
 
   # Concatenate
-  q1_concat = Concatenate()([q1_word_dense1, q1_char_dense1])
-  q2_concat = Concatenate()([q2_word_dense1, q2_char_dense1])
+  q1_concat = Concatenate()([q1_sent_dense1, q1_word_dense1, q1_char_dense1])
+  q2_concat = Concatenate()([q2_sent_dense1, q2_word_dense1, q2_char_dense1])
 
   # Dense
   dense1 = Dense(units=256, activation='relu', kernel_initializer='glorot_normal')
@@ -139,7 +154,7 @@ def build_model(embeddings_matrix, words_num, chars_num):
   # Predict
   output = Dense(units=1, activation='sigmoid', kernel_initializer='glorot_normal')(dense3)
 
-  model = Model([q1_word_input, q1_char_input, q2_word_input, q2_char_input], output)
+  model = Model([q1_sent_input, q1_word_input, q1_char_input, q2_sent_input, q2_word_input, q2_char_input], output)
 
   model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy', f1])
   model.summary()
@@ -149,33 +164,30 @@ def build_model(embeddings_matrix, words_num, chars_num):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data-dir', default='data_dir')
+  parser.add_argument('--doc2vec-dir', default='doc2vec_dir')
   parser.add_argument('--embeddings-dir', default='embeddings_dir')
   parser.add_argument('--dropout-rate', default=0.2, type=float)
   parser.add_argument('--epochs', default=100, type=int)
   parser.add_argument('--batch-size', default=256, type=int)
   args = parser.parse_args()
 
+  doc2vec_model = load_doc2vec_model()
   embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding()
   char2index = load_characters_mapping()
 
   data = list()
   sentences = set()
-  cnt = [0, 0]
   with open(join(args.data_dir, 'train_processed_enlarged.csv'), 'r') as file:
     reader = csv.reader(file)
     for idx, row in enumerate(reader):
       if idx == 0: continue
-      data.append((map_sentence(row[0], word2index, char2index), map_sentence(row[1], word2index, char2index), int(row[2])))
-      data.append((map_sentence(row[1], word2index, char2index), map_sentence(row[0], word2index, char2index), int(row[2])))
+      data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), int(row[2])))
+      data.append((map_sentence(row[1], doc2vec_model, word2index, char2index), map_sentence(row[0], doc2vec_model, word2index, char2index), int(row[2])))
       sentences.add(row[0])
       sentences.add(row[1])
-      cnt[int(row[2])] += 2
 
   for sentence in sentences:
-    data.append((map_sentence(sentence, word2index, char2index), map_sentence(sentence, word2index, char2index), 1))
-    cnt[1] += 1
-
-  print(len(data), cnt)
+    data.append((map_sentence(sentence, doc2vec_model, word2index, char2index), map_sentence(sentence, doc2vec_model, word2index, char2index), 1))
 
   random.shuffle(data)
   dev = data[:2000]
@@ -184,7 +196,7 @@ if __name__ == '__main__':
   train_q1, train_q2, train_label = zip(*train)
   dev_q1, dev_q2, dev_label = zip(*dev)
 
-  model = build_model(embeddings_matrix, len(word2index), len(char2index))
+  model = build_model(embeddings_matrix, 500, len(word2index), len(char2index))
 
   train_gen = DataGenerator(train_q1, train_q2, train_label, args.batch_size, word2index['<PAD>'], char2index['<PAD>'])
   dev_gen = DataGenerator(dev_q1, dev_q2, dev_label, args.batch_size, word2index['<PAD>'], char2index['<PAD>'])

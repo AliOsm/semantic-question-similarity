@@ -26,7 +26,7 @@ if __name__ == '__main__':
       sentences.append(row[0].split())
       sentences.append(row[1].split())
 
-  model = FastText(sentences, size=100, window=5, min_count=1, iter=50, workers=4, sg=1)
+  model = FastText(sentences, vector_size=100, window=5, min_count=1, epochs=50, workers=4, sg=1)
   model.save(join(args.embeddings_dir, 'model'))
 
   print(model.most_similar('رجل'))
