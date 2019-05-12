@@ -3,84 +3,15 @@ import random
 random.seed(961)
 import argparse
 
-import numpy as np
-import pickle as pkl
-import keras.backend as K
-
 from os.path import join
-from gensim.models import FastText
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from keras.models import Input, Model
 from keras.layers import Concatenate, Embedding, Dropout, Dense, LSTM, CuDNNLSTM, Bidirectional
-from keras.optimizers import Adam, Nadam
+from keras.optimizers import Adam, Nadam, Adamax
 from keras.callbacks import ModelCheckpoint, Callback
 from keras_self_attention import SeqWeightedAttention
 
+from helpers import *
 from data_generator import DataGenerator
-
-def load_doc2vec_model():
-  model = Doc2Vec.load(join(args.doc2vec_dir, 'model'))
-  return model
-
-def load_fasttext_embedding():
-  model = FastText.load(join(args.embeddings_dir, 'model'))
-
-  index2word = model.wv.index2word
-  index2word.append('<PAD>')
-  index2word.append('<SOS>')
-  index2word.append('<EOS>')
-  index2word.append('<UNK>')
-
-  word2index = { word:idx for idx, word in enumerate(index2word) }
-
-  embeddings_matrix = model.wv.vectors
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 1))
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 2))
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 3))
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 4))
-
-  return model, index2word, word2index, embeddings_matrix
-
-def load_characters_mapping():
-  with open(join(args.data_dir, 'characters.pkl'), 'rb') as file:
-    characters_mapping = pkl.load(file)
-
-  characters_mapping['<PAD>'] = len(characters_mapping)
-  characters_mapping['<SOS>'] = len(characters_mapping)
-  characters_mapping['<EOS>'] = len(characters_mapping)
-  characters_mapping['<UNK>'] = len(characters_mapping)
-
-  return characters_mapping
-
-def map_sentence(sentence, doc2vec_model, word2index, char2index):
-  word_ints = [word2index['<SOS>']]
-  for word in sentence.split():
-    word_ints.append(word2index[word])
-  word_ints.append(word2index['<EOS>'])
-
-  char_ints = [char2index['<SOS>']]
-  for char in sentence:
-    char_ints.append(char2index[char])
-  char_ints.append(char2index['<EOS>'])
-
-  return doc2vec_model.infer_vector(sentence.split()), word_ints, char_ints
-
-def f1(y_true, y_pred):
-  def precision(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives + K.epsilon())
-    return precision
-
-  def recall(y_true, y_pred):
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + K.epsilon())
-    return recall
-
-  precision = precision(y_true, y_pred)
-  recall = recall(y_true, y_pred)
-  return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 def build_model(embeddings_matrix, doc2vec_size, words_num, chars_num):
   # Inputs
@@ -140,7 +71,7 @@ def build_model(embeddings_matrix, doc2vec_size, words_num, chars_num):
   q2_concat = Concatenate()([q2_sent_dense1, q2_word_dense1, q2_char_dense1])
 
   # Dense
-  dense1 = Dense(units=256, activation='relu', kernel_initializer='glorot_normal')
+  dense1 = Dense(units=384, activation='relu', kernel_initializer='glorot_normal')
   q1_dense1 = Dropout(args.dropout_rate)(dense1(q1_concat))
   q2_dense1 = Dropout(args.dropout_rate)(dense1(q2_concat))
 
@@ -148,11 +79,12 @@ def build_model(embeddings_matrix, doc2vec_size, words_num, chars_num):
   concat = Concatenate()([q1_dense1, q2_dense1])
 
   # Dense
-  dense2 = Dropout(args.dropout_rate)(Dense(units=256, activation='relu', kernel_initializer='glorot_normal')(concat))
-  dense3 = Dropout(args.dropout_rate)(Dense(units=128, activation='relu', kernel_initializer='glorot_normal')(dense2))
+  dense2 = Dropout(args.dropout_rate)(Dense(units=384, activation='relu', kernel_initializer='glorot_normal')(concat))
+  dense3 = Dropout(args.dropout_rate)(Dense(units=192, activation='relu', kernel_initializer='glorot_normal')(dense2))
+  dense4 = Dropout(args.dropout_rate)(Dense(units=96, activation='relu', kernel_initializer='glorot_normal')(dense3))
 
   # Predict
-  output = Dense(units=1, activation='sigmoid', kernel_initializer='glorot_normal')(dense3)
+  output = Dense(units=1, activation='sigmoid', kernel_initializer='glorot_normal')(dense4)
 
   model = Model([q1_sent_input, q1_word_input, q1_char_input, q2_sent_input, q2_word_input, q2_char_input], output)
 
@@ -171,9 +103,9 @@ if __name__ == '__main__':
   parser.add_argument('--batch-size', default=256, type=int)
   args = parser.parse_args()
 
-  doc2vec_model = load_doc2vec_model()
-  embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding()
-  char2index = load_characters_mapping()
+  doc2vec_model = load_doc2vec_model(join(args.doc2vec_dir, 'model'))
+  embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding(join(args.embeddings_dir, 'model'))
+  char2index = load_characters_mapping(join(args.data_dir, 'characters.pkl'))
 
   data = list()
   sentences = set()
@@ -196,7 +128,7 @@ if __name__ == '__main__':
   train_q1, train_q2, train_label = zip(*train)
   dev_q1, dev_q2, dev_label = zip(*dev)
 
-  model = build_model(embeddings_matrix, 500, len(word2index), len(char2index))
+  model = build_model(embeddings_matrix, len(doc2vec_model.infer_vector(['تجربة'])), len(word2index), len(char2index))
 
   train_gen = DataGenerator(train_q1, train_q2, train_label, args.batch_size, word2index['<PAD>'], char2index['<PAD>'])
   dev_gen = DataGenerator(dev_q1, dev_q2, dev_label, args.batch_size, word2index['<PAD>'], char2index['<PAD>'])
