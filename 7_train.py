@@ -88,7 +88,7 @@ def build_model(embeddings_matrix, doc2vec_size, words_num, chars_num):
 
   model = Model([q1_sent_input, q1_word_input, q1_char_input, q2_sent_input, q2_word_input, q2_char_input], output)
 
-  model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy', f1])
+  model.compile(optimizer=Adam(0.01), loss='binary_crossentropy', metrics=['accuracy', f1])
   model.summary()
 
   return model
@@ -114,16 +114,14 @@ if __name__ == '__main__':
     reader = csv.reader(file)
     for row in reader:
       print('Prepare Train Data: %s' % (cnt), end='\r'); cnt += 2
-      shared = compute_shared_features(row[0], row[1], doc2vec_model)
-      data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), shared, int(row[2])))
-      data.append((map_sentence(row[1], doc2vec_model, word2index, char2index), map_sentence(row[0], doc2vec_model, word2index, char2index), shared, int(row[2])))
+      data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), int(row[2])))
+      data.append((map_sentence(row[1], doc2vec_model, word2index, char2index), map_sentence(row[0], doc2vec_model, word2index, char2index), int(row[2])))
       sentences.add(row[0])
       sentences.add(row[1])
 
   for sentence in sentences:
     print('Prepare Train Data: %s' % (cnt), end='\r'); cnt += 1
-    shared = compute_shared_features(sentence, sentence, doc2vec_model)
-    data.append((map_sentence(sentence, doc2vec_model, word2index, char2index), map_sentence(sentence, doc2vec_model, word2index, char2index), shared, 1))
+    data.append((map_sentence(sentence, doc2vec_model, word2index, char2index), map_sentence(sentence, doc2vec_model, word2index, char2index), 1))
   print('Prepare Train Data: Done')
 
   dev_data = list()
@@ -132,8 +130,7 @@ if __name__ == '__main__':
     reader = csv.reader(file)
     for row in reader:
       print('Prepare Dev Data: %s' % (cnt), end='\r'); cnt += 1
-      shared = compute_shared_features(row[0], row[1], doc2vec_model)
-      dev_data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), shared, int(row[2])))
+      dev_data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), int(row[2])))
   print('Prepare Dev Data: Done')
 
   train_q1, train_q2, train_shared, train_label = zip(*data)
@@ -145,6 +142,19 @@ if __name__ == '__main__':
   dev_gen = DataGenerator(dev_q1, dev_q2, dev_label, args.batch_size, word2index['<PAD>'], char2index['<PAD>'])
 
   checkpoint_path = 'checkpoints/epoch{epoch:02d}.ckpt'
-  checkpoint_cb = ModelCheckpoint(checkpoint_path, verbose=0)
+  checkpoint_cb = ModelCheckpoint(checkpoint_path,
+                                  monitor='val_acc',
+                                  verbose=1,
+                                  save_best_only=True,
+                                  mode='max')
 
-  model.fit_generator(generator=train_gen, validation_data=dev_gen, epochs=args.epochs, callbacks=[checkpoint_cb])
+  plateau_cb = ReduceLROnPlateau(monitor='val_acc',
+                                 mode='max',
+                                 factor=0.1,
+                                 patience=20,
+                                 verbose=1)
+
+  model.fit_generator(generator=train_gen,
+                      validation_data=dev_gen,
+                      epochs=args.epochs,
+                      callbacks=[checkpoint_cb, plateau_cb])
