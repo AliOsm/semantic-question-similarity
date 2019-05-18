@@ -37,7 +37,6 @@ if __name__ == '__main__':
     # read data
     print('Reading file..')
     reader = csv.reader(file)
-    next(reader)
 
     # map sentences to unique IDs
     print('Mapping sentences..')
@@ -52,7 +51,6 @@ if __name__ == '__main__':
     # read data
     print('Reading file..')
     reader = csv.reader(file)
-    next(reader)
 
     # build the graph
     print('Building graph..')

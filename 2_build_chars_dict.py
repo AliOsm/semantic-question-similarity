@@ -14,15 +14,13 @@ if __name__ == '__main__':
 
   with open(join(args.data_dir, 'train_processed.csv'), 'r') as file:
   	reader = csv.reader(file)
-  	for idx, row in enumerate(reader):
-  		if idx == 0: continue
+  	for row in reader:
   		chars.update(set(list(row[0])))
   		chars.update(set(list(row[1])))
 
   with open(join(args.data_dir, 'test_processed.csv'), 'r') as file:
   	reader = csv.reader(file)
-  	for idx, row in enumerate(reader):
-  		if idx == 0: continue
+  	for row in reader:
   		chars.update(set(list(row[0])))
   		chars.update(set(list(row[1])))
 

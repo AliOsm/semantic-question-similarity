@@ -109,24 +109,35 @@ if __name__ == '__main__':
 
   data = list()
   sentences = set()
+  cnt = 1
   with open(join(args.data_dir, 'train_processed_enlarged.csv'), 'r') as file:
     reader = csv.reader(file)
-    for idx, row in enumerate(reader):
-      if idx == 0: continue
-      data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), int(row[2])))
-      data.append((map_sentence(row[1], doc2vec_model, word2index, char2index), map_sentence(row[0], doc2vec_model, word2index, char2index), int(row[2])))
+    for row in reader:
+      print('Prepare Train Data: %s' % (cnt), end='\r'); cnt += 2
+      shared = compute_shared_features(row[0], row[1], doc2vec_model)
+      data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), shared, int(row[2])))
+      data.append((map_sentence(row[1], doc2vec_model, word2index, char2index), map_sentence(row[0], doc2vec_model, word2index, char2index), shared, int(row[2])))
       sentences.add(row[0])
       sentences.add(row[1])
 
   for sentence in sentences:
-    data.append((map_sentence(sentence, doc2vec_model, word2index, char2index), map_sentence(sentence, doc2vec_model, word2index, char2index), 1))
+    print('Prepare Train Data: %s' % (cnt), end='\r'); cnt += 1
+    shared = compute_shared_features(sentence, sentence, doc2vec_model)
+    data.append((map_sentence(sentence, doc2vec_model, word2index, char2index), map_sentence(sentence, doc2vec_model, word2index, char2index), shared, 1))
+  print('Prepare Train Data: Done')
 
-  random.shuffle(data)
-  dev = data[:2000]
-  train = data[2000:]
+  dev_data = list()
+  cnt = 1
+  with open(join(args.data_dir, 'dev_processed.csv'), 'r') as file:
+    reader = csv.reader(file)
+    for row in reader:
+      print('Prepare Dev Data: %s' % (cnt), end='\r'); cnt += 1
+      shared = compute_shared_features(row[0], row[1], doc2vec_model)
+      dev_data.append((map_sentence(row[0], doc2vec_model, word2index, char2index), map_sentence(row[1], doc2vec_model, word2index, char2index), shared, int(row[2])))
+  print('Prepare Dev Data: Done')
 
-  train_q1, train_q2, train_label = zip(*train)
-  dev_q1, dev_q2, dev_label = zip(*dev)
+  train_q1, train_q2, train_shared, train_label = zip(*data)
+  dev_q1, dev_q2, dev_shared, dev_label = zip(*dev_data)
 
   model = build_model(embeddings_matrix, len(doc2vec_model.infer_vector(['تجربة'])), len(word2index), len(char2index))
 
