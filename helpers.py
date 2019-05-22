@@ -2,9 +2,40 @@ import numpy as np
 import pickle as pkl
 import keras.backend as K
 
+from os import walk
 from os.path import join
 from gensim.models import FastText
 from gensim.models.doc2vec import Doc2Vec
+from string import punctuation as punc_list
+punc_list += '،؛؟`’‘”“'
+
+def process(line):
+  for punc in punc_list:
+    line = line.replace(punc, ' %s ' % punc)
+  line = ' '.join(line.split())
+  return line
+
+def read_watan(data_dir):
+  sentences = list()
+  for subdir, dirs, files in walk(join(data_dir, 'watan-2004')):
+    for file in files:
+      subsentences = list(map(str.strip, process(open(join(subdir, file), 'r', encoding='windows-1256').read()).split('\n')))
+      for subsentence in subsentences:
+        if len(subsentence) == 0:
+          continue
+        sentences.append(subsentence.split())
+  return sentences
+
+def read_khaleej(data_dir):
+  sentences = list()
+  for subdir, dirs, files in walk(join(data_dir, 'Khaleej-2004')):
+    for file in files:
+      subsentences = list(map(str.strip, process(open(join(subdir, file), 'r', encoding='windows-1256').read()).split('\n')))
+      for subsentence in subsentences:
+        if len(subsentence) == 0:
+          continue
+        sentences.append(subsentence.split())
+  return sentences
 
 def load_doc2vec_model(model_path):
   model = Doc2Vec.load(model_path)

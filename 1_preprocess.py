@@ -2,14 +2,8 @@ import csv
 import argparse
 
 from os.path import join
-from string import punctuation as punc_list
-punc_list += '،؛؟`’‘”“'
 
-def process(line):
-  for punc in punc_list:
-    line = line.replace(punc, ' %s ' % punc)
-  line = ' '.join(line.split())
-  return line
+from helpers import process
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

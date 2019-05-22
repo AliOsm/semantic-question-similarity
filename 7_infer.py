@@ -9,18 +9,18 @@ from os.path import join
 from keras.models import load_model
 from keras_self_attention import SeqWeightedAttention
 
-from helpers import *
+from helpers import load_doc2vec_model, load_fasttext_embedding, load_characters_mapping, map_sentence, f1
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data-dir', default='data_dir')
   parser.add_argument('--doc2vec-dir', default='doc2vec_dir')
-  parser.add_argument('--embeddings-dir', default='embeddings_dir')
+  parser.add_argument('--fasttext-dir', default='fasttext_dir')
   parser.add_argument('--model-path', default='checkpoints/epoch100.ckpt')
   args = parser.parse_args()
 
   doc2vec_model = load_doc2vec_model(join(args.doc2vec_dir, 'model'))
-  embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding(join(args.embeddings_dir, 'model'))
+  embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding(join(args.fasttext_dir, 'model'))
   char2index = load_characters_mapping(join(args.data_dir, 'characters.pkl'))
 
   model = load_model(args.model_path, custom_objects={'f1': f1, 'SeqWeightedAttention': SeqWeightedAttention})

@@ -10,7 +10,7 @@ from keras.optimizers import Adam, Nadam, Adamax
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, Callback
 from keras_self_attention import SeqWeightedAttention
 
-from helpers import *
+from helpers import load_doc2vec_model, load_fasttext_embedding, load_characters_mapping, map_sentence, f1
 from data_generator import DataGenerator
 
 def build_model(embeddings_matrix, doc2vec_size, words_num, chars_num):
@@ -103,14 +103,14 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data-dir', default='data_dir')
   parser.add_argument('--doc2vec-dir', default='doc2vec_dir')
-  parser.add_argument('--embeddings-dir', default='embeddings_dir')
+  parser.add_argument('--fasttext-dir', default='fasttext_dir')
   parser.add_argument('--dropout-rate', default=0.2, type=float)
   parser.add_argument('--epochs', default=100, type=int)
   parser.add_argument('--batch-size', default=256, type=int)
   args = parser.parse_args()
 
   doc2vec_model = load_doc2vec_model(join(args.doc2vec_dir, 'model'))
-  embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding(join(args.embeddings_dir, 'model'))
+  embeddings_model, index2word, word2index, embeddings_matrix = load_fasttext_embedding(join(args.fasttext_dir, 'model'))
   char2index = load_characters_mapping(join(args.data_dir, 'characters.pkl'))
 
   data = list()
@@ -147,7 +147,8 @@ if __name__ == '__main__':
                                   monitor='val_f1',
                                   verbose=1,
                                   save_best_only=False,
-                                  mode='max')
+                                  mode='max',
+                                  period=25)
 
   plateau_cb = ReduceLROnPlateau(monitor='val_f1',
                                  mode='max',
