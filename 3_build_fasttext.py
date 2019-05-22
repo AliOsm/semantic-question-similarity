@@ -33,6 +33,6 @@ if __name__ == '__main__':
 
   model = FastText(sentences, size=100, window=5, min_count=1, iter=5, workers=4, sg=1)
   print('Vocabulary Size:', len(model.wv.index2word))
-  model.save(join(args.embeddings_dir, 'model'))
+  model.save(join(args.fasttext_dir, 'model'))
 
   print(model.most_similar('رجل'))
