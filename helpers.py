@@ -4,8 +4,6 @@ import keras.backend as K
 
 from os import walk
 from os.path import join
-from gensim.models import FastText
-from gensim.models.doc2vec import Doc2Vec
 from string import punctuation as punc_list
 punc_list += '،؛؟`’‘”“'
 
@@ -15,50 +13,24 @@ def process(line):
   line = ' '.join(line.split())
   return line
 
-def read_watan(data_dir):
+def read_extra_data(data_dir):
   sentences = list()
-  for subdir, dirs, files in walk(join(data_dir, 'watan-2004')):
+  for subdir, dirs, files in walk(data_dir):
     for file in files:
-      subsentences = list(map(str.strip, process(open(join(subdir, file), 'r', encoding='windows-1256').read()).split('\n')))
+      subsentences = list(map(
+        str.strip,
+        process(open(join(subdir, file), 'r', encoding='windows-1256').read()).split('\n')
+      ))
       for subsentence in subsentences:
         if len(subsentence) == 0:
           continue
         sentences.append(subsentence.split())
   return sentences
 
-def read_khaleej(data_dir):
-  sentences = list()
-  for subdir, dirs, files in walk(join(data_dir, 'Khaleej-2004')):
-    for file in files:
-      subsentences = list(map(str.strip, process(open(join(subdir, file), 'r', encoding='windows-1256').read()).split('\n')))
-      for subsentence in subsentences:
-        if len(subsentence) == 0:
-          continue
-        sentences.append(subsentence.split())
-  return sentences
-
-def load_doc2vec_model(model_path):
-  model = Doc2Vec.load(model_path)
-  return model
-
-def load_fasttext_embedding(model_path):
-  model = FastText.load(model_path)
-
-  index2word = model.wv.index2word
-  index2word.append('<PAD>')
-  index2word.append('<SOS>')
-  index2word.append('<EOS>')
-  index2word.append('<UNK>')
-
-  word2index = { word:idx for idx, word in enumerate(index2word) }
-
-  embeddings_matrix = model.wv.vectors
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 1))
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 2))
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 3))
-  embeddings_matrix = np.concatenate((embeddings_matrix, np.ones((1, len(embeddings_matrix[0]))) * 4))
-
-  return model, index2word, word2index, embeddings_matrix
+def load_elmo_dict(file_path):
+  with open(file_path, 'rb') as file:
+    elmo_dict = pkl.load(file)
+  return elmo_dict
 
 def load_characters_mapping(file_path):
   with open(file_path, 'rb') as file:
@@ -71,18 +43,17 @@ def load_characters_mapping(file_path):
 
   return characters_mapping
 
-def map_sentence(sentence, doc2vec_model, word2index, char2index):
-  word_ints = [word2index['<SOS>']]
-  for word in sentence.split():
-    word_ints.append(word2index[word])
-  word_ints.append(word2index['<EOS>'])
+def map_sentence(sentence, doc2vec_model, elmo_dict, char2index):
+  elmo_features = [[1] * len(elmo_dict[list(elmo_dict)[0]][0])]
+  elmo_features.extend(elmo_dict[sentence])
+  elmo_features.append([2] * len(elmo_dict[list(elmo_dict)[0]][0]))
 
   char_ints = [char2index['<SOS>']]
   for char in sentence:
     char_ints.append(char2index[char])
   char_ints.append(char2index['<EOS>'])
 
-  return doc2vec_model.infer_vector(sentence.split()), word_ints, char_ints
+  return doc2vec_model.infer_vector(sentence.split()), elmo_features, char_ints
 
 def f1(y_true, y_pred):
   def precision(y_true, y_pred):
@@ -99,4 +70,4 @@ def f1(y_true, y_pred):
 
   precision = precision(y_true, y_pred)
   recall = recall(y_true, y_pred)
-  return 2*((precision*recall)/(precision+recall+K.epsilon()))
+  return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
