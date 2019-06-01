@@ -3,7 +3,6 @@ import argparse
 
 import numpy as np
 import pickle as pkl
-import keras.backend as K
 
 from os import remove
 from os.path import join
@@ -13,9 +12,6 @@ from keras_self_attention import SeqWeightedAttention
 
 from helpers import load_elmo_dict, load_characters_mapping
 from helpers import map_sentence, f1
-
-def exponent_neg_manhattan_distance(left, right):
-  return K.exp(-K.sum(K.abs(left - right), axis=1, keepdims=True))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -32,8 +28,7 @@ if __name__ == '__main__':
     filepath=args.model_path,
     custom_objects={
       'f1': f1,
-      'SeqWeightedAttention': SeqWeightedAttention,
-      'exponent_neg_manhattan_distance': exponent_neg_manhattan_distance
+      'SeqWeightedAttention': SeqWeightedAttention
     }
   )
 

@@ -2,7 +2,6 @@ import csv
 import random
 random.seed(961)
 import argparse
-import keras.backend as K
 
 from os.path import join
 from gensim.models.doc2vec import Doc2Vec
@@ -16,9 +15,6 @@ from keras_self_attention import SeqWeightedAttention
 from helpers import load_elmo_dict, load_characters_mapping
 from helpers import map_sentence, f1
 from data_generator import DataGenerator
-
-def exponent_neg_manhattan_distance(left, right):
-	return K.exp(-K.sum(K.abs(left - right), axis=1, keepdims=True))
 
 def build_model(doc2vec_size, elmo_size, chars_num):
   # Inputs
@@ -87,38 +83,31 @@ def build_model(doc2vec_size, elmo_size, chars_num):
   q2_dense1 = Dropout(args.dropout_rate)(dense1(q2_concat))
 
   # Concatenate
-  output = Lambda(
-  	function=lambda x: exponent_neg_manhattan_distance(x[0], x[1]),
-  	output_shape=lambda x: (x[0][0], 1)
-  )([q1_dense1, q2_dense1])
-
-  # subtract = Subtract()([q1_dense1, q2_dense1])
-  # multiply_subtract = Multiply()([subtract, subtract])
-  # multiply = Multiply()([q1_dense1, q2_dense1])
-  # concat = Concatenate()([multiply_subtract, multiply])
+  subtract = Subtract()([q1_dense1, q2_dense1])
+  multiply_subtract = Multiply()([subtract, subtract])
+  multiply = Multiply()([q1_dense1, q2_dense1])
+  concat = Concatenate()([multiply_subtract, multiply])
   
-  # concat = Concatenate()([q1_dense1, q2_dense1])
-
   # Dense
-  # dense2 = Dropout(args.dropout_rate)(
-  #   Dense(units=512, activation='relu', kernel_initializer='glorot_normal')(concat)
-  # )
-  # dense3 = Dropout(args.dropout_rate)(
-  #   Dense(units=256, activation='relu', kernel_initializer='glorot_normal')(dense2)
-  # )
-  # dense4 = Dropout(args.dropout_rate)(
-  #   Dense(units=128, activation='relu', kernel_initializer='glorot_normal')(dense3)
-  # )
+  dense2 = Dropout(args.dropout_rate)(
+    Dense(units=512, activation='relu', kernel_initializer='glorot_normal')(concat)
+  )
+  dense3 = Dropout(args.dropout_rate)(
+    Dense(units=256, activation='relu', kernel_initializer='glorot_normal')(dense2)
+  )
+  dense4 = Dropout(args.dropout_rate)(
+    Dense(units=128, activation='relu', kernel_initializer='glorot_normal')(dense3)
+  )
 
   # Predict
-  # output = Dense(units=1, activation='sigmoid', kernel_initializer='glorot_normal')(dense4)
+  output = Dense(units=1, activation='sigmoid', kernel_initializer='glorot_normal')(dense4)
 
   model = Model([
     q1_sent_input, q1_elmo_input, q1_char_input,
     q2_sent_input, q2_elmo_input, q2_char_input
   ], output)
 
-  model.compile(optimizer=Adam(lr=0.001), loss='mse', metrics=['accuracy', f1])
+  model.compile(optimizer=Adam(lr=0.001), loss='binary_crossentropy', metrics=['accuracy', f1])
   model.summary()
 
   return model
@@ -184,8 +173,7 @@ if __name__ == '__main__':
       filepath='checkpoints/epoch%s.ckpt' % args.initial_epoch,
       custom_objects={
         'f1': f1,
-        'SeqWeightedAttention': SeqWeightedAttention,
-        'exponent_neg_manhattan_distance': exponent_neg_manhattan_distance
+        'SeqWeightedAttention': SeqWeightedAttention
       }
     )
 
