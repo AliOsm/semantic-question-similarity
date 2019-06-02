@@ -7,3 +7,4 @@ fasttext_dir/model*
 doc2vec_dir/model*
 checkpoints/*.ckpt
 data_dir/*.pkl
+data_dir/submit.csv

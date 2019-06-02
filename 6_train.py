@@ -11,6 +11,7 @@ from keras.layers import Dense, GRU, CuDNNGRU, LSTM, CuDNNLSTM, Bidirectional
 from keras.optimizers import Adam, Adamax, Adadelta
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, Callback
 from keras_self_attention import SeqWeightedAttention
+from optimizer import NormalizedOptimizer
 
 from helpers import load_elmo_dict, load_characters_mapping
 from helpers import map_sentence, f1
@@ -107,7 +108,11 @@ def build_model(doc2vec_size, elmo_size, chars_num):
     q2_sent_input, q2_elmo_input, q2_char_input
   ], output)
 
-  model.compile(optimizer=Adam(lr=0.001), loss='binary_crossentropy', metrics=['accuracy', f1])
+  model.compile(
+    optimizer=Adam(lr=0.001),
+    loss='binary_crossentropy',
+    metrics=['accuracy', f1]
+  )
   model.summary()
 
   return model
