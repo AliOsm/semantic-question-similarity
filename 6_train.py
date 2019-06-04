@@ -10,6 +10,7 @@ from keras.layers import Lambda, Subtract, Multiply, Concatenate, Embedding, Dro
 from keras.layers import Dense, GRU, CuDNNGRU, LSTM, CuDNNLSTM, Bidirectional
 from keras.optimizers import Adam, Adamax, Adadelta
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, Callback
+from keras_ordered_neurons import ONLSTM
 from keras_self_attention import SeqWeightedAttention
 from optimizer import NormalizedOptimizer
 
@@ -38,20 +39,34 @@ def build_model(doc2vec_size, elmo_size, chars_num):
 
   # LSTM
   word_lstm1 = Bidirectional(
-    LSTM(
+    ONLSTM(
       units=256,
+      chunk_size=8,
+      dropout=args.dropout_rate,
+      return_sequences=True,
+      kernel_initializer='glorot_normal'
+    )
+  )
+  q1_word_lstm1 = word_lstm1(q1_elmo_input)
+  q2_word_lstm1 = word_lstm1(q2_elmo_input)
+
+  word_lstm2 = Bidirectional(
+    ONLSTM(
+      units=256,
+      chunk_size=8,
       dropout=args.dropout_rate,
       return_sequences=True,
       kernel_initializer='glorot_normal'
     )
   )
   word_attention = SeqWeightedAttention()
-  q1_word_lstm1 = word_attention(word_lstm1(q1_elmo_input))
-  q2_word_lstm1 = word_attention(word_lstm1(q2_elmo_input))
+  q1_word_lstm2 = word_attention(word_lstm2(q1_word_lstm1))
+  q2_word_lstm2 = word_attention(word_lstm2(q2_word_lstm1))
 
   char_lstm1 = Bidirectional(
-    LSTM(
+    ONLSTM(
       units=128,
+      chunk_size=16,
       dropout=args.dropout_rate,
       return_sequences=True,
       kernel_initializer='glorot_normal'
@@ -66,32 +81,20 @@ def build_model(doc2vec_size, elmo_size, chars_num):
   q1_sent_dense1 = Dropout(args.dropout_rate)(sent_dense1(q1_sent_input))
   q2_sent_dense1 = Dropout(args.dropout_rate)(sent_dense1(q2_sent_input))
 
-  word_dense1 = Dense(units=512, activation='relu', kernel_initializer='glorot_normal')
-  q1_word_dense1 = Dropout(args.dropout_rate)(word_dense1(q1_word_lstm1))
-  q2_word_dense1 = Dropout(args.dropout_rate)(word_dense1(q2_word_lstm1))
-
-  char_dense1 = Dense(units=256, activation='relu', kernel_initializer='glorot_normal')
-  q1_char_dense1 = Dropout(args.dropout_rate)(char_dense1(q1_char_lstm1))
-  q2_char_dense1 = Dropout(args.dropout_rate)(char_dense1(q2_char_lstm1))
+  # Concatenate
+  q1_concat = Concatenate()([q1_sent_dense1, q1_word_lstm2, q1_char_lstm1])
+  q2_concat = Concatenate()([q2_sent_dense1, q2_word_lstm2, q2_char_lstm1])
 
   # Concatenate
-  q1_concat = Concatenate()([q1_sent_dense1, q1_word_dense1, q1_char_dense1])
-  q2_concat = Concatenate()([q2_sent_dense1, q2_word_dense1, q2_char_dense1])
-
-  # Dense
-  dense1 = Dense(units=512, activation='relu', kernel_initializer='glorot_normal')
-  q1_dense1 = Dropout(args.dropout_rate)(dense1(q1_concat))
-  q2_dense1 = Dropout(args.dropout_rate)(dense1(q2_concat))
-
-  # Concatenate
-  subtract = Subtract()([q1_dense1, q2_dense1])
+  subtract = Subtract()([q1_concat, q2_concat])
   multiply_subtract = Multiply()([subtract, subtract])
-  multiply = Multiply()([q1_dense1, q2_dense1])
-  concat = Concatenate()([multiply_subtract, multiply])
   
   # Dense
+  dense1 = Dropout(args.dropout_rate)(
+    Dense(units=1024, activation='relu', kernel_initializer='glorot_normal')(multiply_subtract)
+  )
   dense2 = Dropout(args.dropout_rate)(
-    Dense(units=512, activation='relu', kernel_initializer='glorot_normal')(concat)
+    Dense(units=512, activation='relu', kernel_initializer='glorot_normal')(dense1)
   )
   dense3 = Dropout(args.dropout_rate)(
     Dense(units=256, activation='relu', kernel_initializer='glorot_normal')(dense2)
@@ -178,7 +181,8 @@ if __name__ == '__main__':
       filepath='checkpoints/epoch%s.ckpt' % args.initial_epoch,
       custom_objects={
         'f1': f1,
-        'SeqWeightedAttention': SeqWeightedAttention
+        'SeqWeightedAttention': SeqWeightedAttention,
+        'ONLSTM': ONLSTM
       }
     )
 

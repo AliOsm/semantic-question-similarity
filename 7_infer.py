@@ -8,6 +8,7 @@ from os import remove
 from os.path import join
 from gensim.models.doc2vec import Doc2Vec
 from keras.models import load_model
+from keras_ordered_neurons import ONLSTM
 from keras_self_attention import SeqWeightedAttention
 
 from helpers import load_elmo_dict, load_characters_mapping
@@ -28,7 +29,8 @@ if __name__ == '__main__':
     filepath=args.model_path,
     custom_objects={
       'f1': f1,
-      'SeqWeightedAttention': SeqWeightedAttention
+      'SeqWeightedAttention': SeqWeightedAttention,
+      'ONLSTM': ONLSTM
     }
   )
 

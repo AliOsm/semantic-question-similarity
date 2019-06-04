@@ -27,10 +27,10 @@ def read_extra_data(data_dir):
         sentences.append(subsentence.split())
   return sentences
 
-def load_elmo_dict(file_path):
+def load_embeddings_dict(file_path):
   with open(file_path, 'rb') as file:
-    elmo_dict = pkl.load(file)
-  return elmo_dict
+    embeddings_dict = pkl.load(file)
+  return embeddings_dict
 
 def load_characters_mapping(file_path):
   with open(file_path, 'rb') as file:
@@ -43,17 +43,13 @@ def load_characters_mapping(file_path):
 
   return characters_mapping
 
-def map_sentence(sentence, doc2vec_model, elmo_dict, char2index):
-  elmo_features = [[1] * len(elmo_dict[list(elmo_dict)[0]][0])]
-  elmo_features.extend(elmo_dict[sentence])
-  elmo_features.append([2] * len(elmo_dict[list(elmo_dict)[0]][0]))
-
+def map_sentence(sentence, doc2vec_model, embeddings_dict, char2index):
   char_ints = [char2index['<SOS>']]
   for char in sentence:
     char_ints.append(char2index[char])
   char_ints.append(char2index['<EOS>'])
 
-  return doc2vec_model.infer_vector(sentence.split()), elmo_features, char_ints
+  return doc2vec_model.infer_vector(sentence.split()), embeddings_dict[sentence], char_ints
 
 def f1(y_true, y_pred):
   def precision(y_true, y_pred):
