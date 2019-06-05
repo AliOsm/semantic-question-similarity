@@ -133,7 +133,7 @@ if __name__ == '__main__':
       custom_objects={
         'f1': f1,
         'SeqWeightedAttention': SeqWeightedAttention,
-        'exponent_neg_manhattan_distance': exponent_neg_manhattan_distance
+        'ONLSTM': ONLSTM
       }
     )
 
