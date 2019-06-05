@@ -3,8 +3,6 @@ elmo_dir/*.json
 elmo_dir/*.pkl
 elmo_dir/*.dic
 elmo_dir/README
-fasttext_dir/model*
-doc2vec_dir/model*
-checkpoints/*.ckpt
+checkpoints/*.h5
 data_dir/*.pkl
 data_dir/submit.csv
