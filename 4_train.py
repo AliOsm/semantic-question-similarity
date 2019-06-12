@@ -83,42 +83,25 @@ if __name__ == '__main__':
   parser.add_argument('--epochs', default=100, type=int)
   parser.add_argument('--batch-size', default=256, type=int)
   parser.add_argument('--initial-epoch', default=0, type=int)
+  parser.add_argument('--dev-split', default=500, type=int)
   args = parser.parse_args()
 
   embeddings_dict = load_embeddings_dict(join(args.data_dir, '%s_dict.pkl' % args.embeddings_type))
 
   data = list()
-  sentences = set()
-  cnt = 0
   with open(join(args.data_dir, 'train_processed_enlarged.csv'), 'r') as file:
     reader = csv.reader(file)
     for row in reader:
-      print('Prepare Data: %s' % (cnt), end='\r'); cnt += 2
+      print('Prepare Data: %s' % (idx + 1), end='\r')
       data.append((
         map_sentence(row[0], embeddings_dict),
         map_sentence(row[1], embeddings_dict),
         int(row[2])
       ))
-      data.append((
-        map_sentence(row[1], embeddings_dict),
-        map_sentence(row[0], embeddings_dict),
-        int(row[2])
-      ))
-      sentences.add(row[0])
-      sentences.add(row[1])
-
-  for sentence in sentences:
-    print('Prepare Data: %s' % (cnt), end='\r'); cnt += 1
-    data.append((
-      map_sentence(sentence, embeddings_dict),
-      map_sentence(sentence, embeddings_dict),
-      1
-    ))
-  print('Prepare %d examples: Done          ' % (cnt))
 
   random.shuffle(data)
-  train = data[2000:]
-  dev = data[:2000]
+  train = data[args.dev_split:]
+  dev = data[:args.dev_split]
 
   train_q1, train_q2, train_label = zip(*train)
   dev_q1, dev_q2, dev_label = zip(*dev)
