@@ -91,7 +91,7 @@ if __name__ == '__main__':
   data = list()
   with open(join(args.data_dir, 'train_processed_enlarged.csv'), 'r') as file:
     reader = csv.reader(file)
-    for row in reader:
+    for idx, row in enumerate(reader):
       print('Prepare Data: %s' % (idx + 1), end='\r')
       data.append((
         map_sentence(row[0], embeddings_dict),
