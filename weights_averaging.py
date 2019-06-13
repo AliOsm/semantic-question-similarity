@@ -45,4 +45,4 @@ if __name__ == '__main__':
   avg_model.set_weights(new_weights)
 
   print('Saving averaged model to: %s' % join(args.folder_path, 'averaged'))
-  avg_model.save(join(args.folder_path, 'averaged.h5' % avg))
+  avg_model.save(join(args.folder_path, 'averaged.h5'))
