@@ -1,6 +1,7 @@
 import csv
 import argparse
- 
+import numpy as np
+
 from os import walk
 from os.path import join
 from keras.models import load_model

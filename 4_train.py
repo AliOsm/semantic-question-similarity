@@ -89,15 +89,33 @@ if __name__ == '__main__':
   embeddings_dict = load_embeddings_dict(join(args.data_dir, '%s_dict.pkl' % args.embeddings_type))
 
   data = list()
+  sentences = set()
+  cnt = 0
   with open(join(args.data_dir, 'train_processed_enlarged.csv'), 'r') as file:
     reader = csv.reader(file)
-    for idx, row in enumerate(reader):
-      print('Prepare Data: %s' % (idx + 1), end='\r')
+    for row in reader:
+      cnt += 2; print('Prepare Data: %s' % (cnt), end='\r')
       data.append((
         map_sentence(row[0], embeddings_dict),
         map_sentence(row[1], embeddings_dict),
         int(row[2])
       ))
+      data.append((
+        map_sentence(row[1], embeddings_dict),
+        map_sentence(row[0], embeddings_dict),
+        int(row[2])
+      ))
+      sentences.add(row[0])
+      sentences.add(row[1])
+
+  for sentence in sentences:
+    cnt += 1; print('Prepare Data: %s' % (cnt), end='\r')
+    data.append((
+      map_sentence(sentence, embeddings_dict),
+      map_sentence(sentence, embeddings_dict),
+      1
+    ))
+  print('Prepare %d examples: Done          ' % (cnt))
 
   random.shuffle(data)
   train = data[args.dev_split:]
