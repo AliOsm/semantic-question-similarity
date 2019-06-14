@@ -6,4 +6,4 @@ elmo_dir/README
 checkpoints/*.h5
 data_dir/*.pkl
 data_dir/submit.csv
-saved_models/
+saved_models/p*
