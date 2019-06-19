@@ -18,6 +18,7 @@ if __name__ == '__main__':
   parser.add_argument('--data-dir', default='data_dir')
   parser.add_argument('--embeddings-type', default='elmo', choices=['elmo', 'bert'])
   parser.add_argument('--model-path', default='checkpoints/epoch100.h5')
+  parser.add_argument('--output-type', default='binary', choices=['binary', 'probability'])
   args = parser.parse_args()
 
   embeddings_dict = load_embeddings_dict(join(args.data_dir, '%s_dict.pkl' % args.embeddings_type))
@@ -54,7 +55,10 @@ if __name__ == '__main__':
     for idx, example in enumerate(data):
       print('Predicting Example: %s' % (idx + 1), end='\r')
       prediction = model.predict([[np.array(example[0])], [np.array(example[1])]]).squeeze()
-      if prediction >= 0.5:
-        writer.writerow([example[2], 1])
+      if args.output_type == 'binary':
+        if prediction >= 0.5:
+          writer.writerow([example[2], 1])
+        else:
+          writer.writerow([example[2], 0])
       else:
-        writer.writerow([example[2], 0])
+        writer.writerow([example[2], prediction])

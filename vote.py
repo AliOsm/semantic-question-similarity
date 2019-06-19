@@ -8,6 +8,7 @@ from os.path import join
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('-in', '--folder-path')
+  parser.add_argument('--vote-type', default='binary', choices=['binary', 'probability'])
   args = parser.parse_args()
 
   files = []
@@ -24,21 +25,34 @@ if __name__ == '__main__':
       next(reader)
       for row in reader:
         try:
-          predictions[int(row[0])].append(int(row[1]))
+          if args.vote_type == 'binary':
+            predictions[int(row[0])].append(int(row[1]))
+          else:
+            predictions[int(row[0])].append(float(row[1]))
         except:
-          predictions[int(row[0])] = [int(row[1])]
+          if args.vote_type == 'binary':
+            predictions[int(row[0])] = [int(row[1])]
+          else:
+            predictions[int(row[0])] = [float(row[1])]
 
   with open(join(args.folder_path, 'vote.csv'), 'w') as file:
     writer = csv.writer(file)
     writer.writerow(['QuestionPairID', 'Prediction'])
 
     for example in predictions:
-      ones = sum(predictions[example])
-      zeros = 5 - ones
+      if args.vote_type == 'binary':
+        ones = sum(predictions[example])
+        zeros = 5 - ones
 
-      if ones == zeros:
-      	writer.writerow([example, random.randint(0, 1)])
-      elif ones > zeros:
-        writer.writerow([example, 1])
+        if ones == zeros:
+          writer.writerow([example, random.randint(0, 1)])
+        elif ones > zeros:
+          writer.writerow([example, 1])
+        else:
+          writer.writerow([example, 0])
       else:
-        writer.writerow([example, 0])
+        s = sum(predictions[example]) / 5
+        if s >= 0.5:
+          writer.writerow([example, 1])
+        else:
+          writer.writerow([example, 0])
