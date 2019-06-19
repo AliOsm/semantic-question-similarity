@@ -1,4 +1,5 @@
 import csv
+import random
 import argparse
  
 from os import walk
@@ -35,7 +36,9 @@ if __name__ == '__main__':
       ones = sum(predictions[example])
       zeros = 5 - ones
 
-      if ones > zeros:
+      if ones == zeros:
+      	writer.writerow([example, random.randint(0, 1)])
+      elif ones > zeros:
         writer.writerow([example, 1])
       else:
         writer.writerow([example, 0])

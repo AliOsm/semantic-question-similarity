@@ -21,7 +21,7 @@ def build_model(embeddings_size):
   q1_embeddings_input = Input(shape=(None, embeddings_size,), name='q1_word_embeddings')
   q2_embeddings_input = Input(shape=(None, embeddings_size,), name='q2_word_embeddings')
 
-  # LSTM
+  # RNN
   word_lstm1 = Bidirectional(
     ONLSTM(
       units=256,
@@ -31,8 +31,8 @@ def build_model(embeddings_size):
       kernel_initializer='glorot_normal'
     )
   )
-  q1_dense1 = word_lstm1(q1_embeddings_input)
-  q2_dense1 = word_lstm1(q2_embeddings_input)
+  q1_word_lstm1 = word_lstm1(q1_embeddings_input)
+  q2_word_lstm1 = word_lstm1(q2_embeddings_input)
 
   word_lstm2 = Bidirectional(
     ONLSTM(
@@ -43,15 +43,18 @@ def build_model(embeddings_size):
       kernel_initializer='glorot_normal'
     )
   )
+  q1_word_lstm2 = word_lstm2(q1_word_lstm1)
+  q2_word_lstm2 = word_lstm2(q2_word_lstm1)
+
   word_attention = SeqWeightedAttention()
-  q1_dense2 = word_attention(word_lstm2(q1_dense1))
-  q2_dense2 = word_attention(word_lstm2(q2_dense1))
+  q1_word_attention = word_attention(q1_word_lstm2)
+  q2_word_attention = word_attention(q2_word_lstm2)
 
   # Concatenate
-  subtract = Subtract()([q1_dense2, q2_dense2])
+  subtract = Subtract()([q1_word_attention, q2_word_attention])
   multiply_subtract = Multiply()([subtract, subtract])
   
-  # Dense
+  # Fully Connected
   dense1 = Dropout(args.dropout_rate)(
     Dense(units=1024, activation='relu', kernel_initializer='glorot_normal')(multiply_subtract)
   )
