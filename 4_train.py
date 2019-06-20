@@ -92,9 +92,9 @@ if __name__ == '__main__':
   embeddings_dict = load_embeddings_dict(join(args.data_dir, '%s_dict.pkl' % args.embeddings_type))
 
   data = list()
-  sentences = set()
+  # sentences = set()
   cnt = 0
-  with open(join(args.data_dir, 'train_processed_enlarged.csv'), 'r') as file:
+  with open(join(args.data_dir, 'train_processed.csv'), 'r') as file:
     reader = csv.reader(file)
     for row in reader:
       cnt += 2; print('Prepare Data: %s' % (cnt), end='\r')
@@ -103,29 +103,29 @@ if __name__ == '__main__':
         map_sentence(row[1], embeddings_dict),
         int(row[2])
       ))
-      data.append((
-        map_sentence(row[1], embeddings_dict),
-        map_sentence(row[0], embeddings_dict),
-        int(row[2])
-      ))
-      sentences.add(row[0])
-      sentences.add(row[1])
+      # data.append((
+      #   map_sentence(row[1], embeddings_dict),
+      #   map_sentence(row[0], embeddings_dict),
+      #   int(row[2])
+      # ))
+      # sentences.add(row[0])
+      # sentences.add(row[1])
 
-  for sentence in sentences:
-    cnt += 1; print('Prepare Data: %s' % (cnt), end='\r')
-    data.append((
-      map_sentence(sentence, embeddings_dict),
-      map_sentence(sentence, embeddings_dict),
-      1
-    ))
-  print('Prepare %d examples: Done          ' % (cnt))
+  # for sentence in sentences:
+  #   cnt += 1; print('Prepare Data: %s' % (cnt), end='\r')
+  #   data.append((
+  #     map_sentence(sentence, embeddings_dict),
+  #     map_sentence(sentence, embeddings_dict),
+  #     1
+  #   ))
+  # print('Prepare %d examples: Done          ' % (cnt))
 
   random.shuffle(data)
   train = data[args.dev_split:]
   dev = data[:args.dev_split]
 
   train_q1, train_q2, train_label = zip(*train)
-  dev_q1, dev_q2, dev_label = zip(*dev)
+  # dev_q1, dev_q2, dev_label = zip(*dev)
 
   if args.initial_epoch == 0:
     model = build_model(
@@ -148,12 +148,12 @@ if __name__ == '__main__':
     args.batch_size
   )
 
-  dev_gen = DataGenerator(
-    dev_q1,
-    dev_q2,
-    dev_label,
-    args.batch_size
-  )
+  # dev_gen = DataGenerator(
+  #   dev_q1,
+  #   dev_q2,
+  #   dev_label,
+  #   args.batch_size
+  # )
 
   checkpoint_cb = ModelCheckpoint(
     filepath='checkpoints/epoch{epoch:02d}.h5',
@@ -173,7 +173,7 @@ if __name__ == '__main__':
   )
 
   model.fit_generator(generator=train_gen,
-                      validation_data=dev_gen,
+                      # validation_data=dev_gen,
                       epochs=args.epochs,
                       callbacks=[checkpoint_cb],
                       initial_epoch=args.initial_epoch)

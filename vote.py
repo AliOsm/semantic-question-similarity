@@ -35,7 +35,7 @@ if __name__ == '__main__':
           else:
             predictions[int(row[0])] = [float(row[1])]
 
-  with open(join(args.folder_path, 'vote.csv'), 'w') as file:
+  with open(join(args.folder_path, 'vote-%s.csv' % args.vote_type), 'w') as file:
     writer = csv.writer(file)
     writer.writerow(['QuestionPairID', 'Prediction'])
 
