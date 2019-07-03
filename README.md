@@ -46,3 +46,8 @@ To inference the model and predict the test set run the following command:
 python 5_infer.py --model-path checkpoints/epoch100.h5
 ```
 You can set the `--model-path` to any path pointing to a model checkpoint. This script by default uses `0.5` threshold, you can change it using `--threshold` argument
+
+## Model Structure
+
+The following figure shows the model structure in a clearer way.
+![model-structure](model_representation.png)
