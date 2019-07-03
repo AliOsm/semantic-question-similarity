@@ -1,4 +1,5 @@
 import csv
+import json
 import argparse
 
 import numpy as np
@@ -18,6 +19,12 @@ if __name__ == '__main__':
 
   if args.embeddings_type == 'elmo':
     elmo_model = Embedder(args.elmo_dir, batch_size=args.batch_size)
+
+    with open(join(args.elmo_dir, 'config.json'), 'r') as file:
+      elmo_config_json = json.load(file)
+    elmo_config_json['config_path'] = 'cnn_50_100_512_4096_sample.json'
+    with open(join(args.elmo_dir, 'config.json'), 'w') as file:
+      json.dump(elmo_config_json, file)
   else:
     bert_model = BertEmbedding(dataset_name='wiki_multilingual_cased')
 
