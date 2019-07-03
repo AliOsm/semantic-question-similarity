@@ -2,10 +2,14 @@
 
 Official implementation of: [Semantic Text Similarity Using Squared Distance Contextual Ordered Neurons LSTM With Weighted Attention](paper-url)
 
+Note: All codes and scripts in this repository tested on Ubuntu 18.04 LTS.
+
 ## 0. Prerequisites
 - Python 3.6.8
 - Packages listed in `requirements.txt` file
-- Arabic ELMo pre-trained model unzipped in `elmo_dir` folder, can be downloaded from here: https://github.com/HIT-SCIR/ELMoForManyLangs
+- To use ELMo embeddings:
+  - Download and unzip the Arabic ELMo pre-trained model from: https://github.com/HIT-SCIR/ELMoForManyLangs into `elmo_dir` folder
+  - Download this file: https://github.com/HIT-SCIR/ELMoForManyLangs/blob/master/configs/cnn_50_100_512_4096_sample.json and save it in `elmo_dir` folder
 
 ## 1. Data Preprocessing
 To preprocess the data run the following commands:
