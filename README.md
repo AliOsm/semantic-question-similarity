@@ -1,12 +1,48 @@
 # mawdoo3-task
 
-## Run these commands to produce results
+Official implementation of: [Semantic Text Similarity Using Squared Distance Contextual Ordered Neurons LSTM With Weighted Attention](paper-url)
 
-- `python preprocess.py`
-- `python preprocess.py --split test`
-- `python enlarge.py`
-- `python build_fasttext.py`
-- `python build_doc2vec.py`
-- `python build_chars_dict.py`
-- `python train.py`
-- `python infer.py`
+## 0. Prerequisites
+- Python 3.6.8
+- Packages listed in `requirements.txt` file
+
+## 1. Data Preprocessing
+To preprocess the data run the following commands:
+```
+python 1_preprocess.py --dataset-split train
+python 1_preprocess.py --dataset-split test
+```
+
+## 2. Data Enlarging
+To enlarge the data using the graph connected components extracted from the training data run the following command:
+```
+python 2_enlarge.py
+```
+
+## 3. Generating Words Embeddings
+Before start the training of the model you need to generate the words embeddings using either *ELMo* or *BERT* pre-trained models to make the training process faster instead of generating the embeddings vectors for each individual batch separately while training.
+
+To generate the embeddings pickle file containing the *ELMo* embeddings run the following command:
+```
+python 3_build_embeddings_dict.py --embeddings-type elmo
+```
+And to generate the embeddings pickle file containing the *BERT* embeddings run the following command:
+```
+python 3_build_embeddings_dict.py --embeddings-type bert
+```
+
+**Note that *ELMo* embeddings achieved better performance than *BERT* due to the lack of a good pre-trained Arabic *BERT* model.**
+
+## 4. Model Training
+To start training the model run the following command:
+```
+python 4_train.py --embeddings-type elmo --dropout-rate 0.2 --epochs 100 --batch-size 256 --dev-split 2000
+```
+You can use the command-line arguments to change the training hyperparameters, for example you can set `--embeddings-type` to `bert` to train the model using *BERT* embeddings.
+
+## 5. Model Inferencing
+To inference the model and predict the test set run the following command:
+```
+python 5_infer.py --model-path checkpoints/epoch100.h5
+```
+You can set the `--model-path` to any path pointing to a model checkpoint. This script by default uses `0.5` threshold, you can change it using `--threshold` argument
