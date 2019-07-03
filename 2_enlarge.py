@@ -1,6 +1,6 @@
+import sys
 import csv
 import argparse
-import sys
 
 from os.path import join
 

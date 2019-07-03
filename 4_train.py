@@ -86,7 +86,7 @@ if __name__ == '__main__':
   parser.add_argument('--epochs', default=100, type=int)
   parser.add_argument('--batch-size', default=256, type=int)
   parser.add_argument('--initial-epoch', default=0, type=int)
-  parser.add_argument('--dev-split', default=500, type=int)
+  parser.add_argument('--dev-split', default=2000, type=int)
   args = parser.parse_args()
 
   embeddings_dict = load_embeddings_dict(join(args.data_dir, '%s_dict.pkl' % args.embeddings_type))

@@ -1,0 +1,10 @@
+arabic-reshaper==2.0.15
+bert-embedding==1.0.1
+elmoformanylangs==0.0.2
+Keras==2.2.4
+keras-ordered-neurons==0.8.0
+keras-self-attention==0.41.0
+matplotlib==2.2.3
+numpy==1.14.6
+python-bidi==0.4.0
+sklearn==0.0
