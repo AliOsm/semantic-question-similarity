@@ -5,6 +5,7 @@ Official implementation of: [Semantic Text Similarity Using Squared Distance Con
 ## 0. Prerequisites
 - Python 3.6.8
 - Packages listed in `requirements.txt` file
+- Arabic ELMo pre-trained model unzipped in `elmo_dir` folder, can be downloaded from here: https://github.com/HIT-SCIR/ELMoForManyLangs
 
 ## 1. Data Preprocessing
 To preprocess the data run the following commands:
