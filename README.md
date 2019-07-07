@@ -55,4 +55,4 @@ You can set the `--model-path` to any path pointing to a model checkpoint. This 
 ## Model Structure
 
 The following figure shows the model structure in a clearer way.
-![model-structure](model_representation.png)
+![model-structure](plots/model_representation.png)
