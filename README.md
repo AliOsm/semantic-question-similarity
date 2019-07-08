@@ -8,6 +8,8 @@ Note: All codes and scripts in this repository tested on Ubuntu 18.04 LTS.
 - Python 3.6.8
 - Packages listed in `requirements.txt` file
 - To use ELMo embeddings:
+	- Clone this repository: https://github.com/HIT-SCIR/ELMoForManyLangs
+	- Inside the folder of the cloned repository, run the following command: `python setup.py install`
   - Download and unzip the Arabic ELMo pre-trained model from: https://github.com/HIT-SCIR/ELMoForManyLangs into `elmo_dir` folder
   - Download this file: https://github.com/HIT-SCIR/ELMoForManyLangs/blob/master/configs/cnn_50_100_512_4096_sample.json and save it in `elmo_dir` folder
 
