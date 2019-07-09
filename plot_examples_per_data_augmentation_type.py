@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-plt.rcParams.update({'font.size': 16})
+plt.rcParams.update({'font.size': 25})
 
 augmentation_type = [
 	'Original',
@@ -23,7 +23,7 @@ df = pd.DataFrame({
 )
 
 ax = df.plot.bar(rot=0)
-ax.set_title('Examples Number per Data Augmentation Type')
+# ax.set_title('Examples Number per Data Augmentation Type')
 ax.set_xlabel('Augmentation Type')
 ax.set_ylabel('Examples Number')
 ax.autoscale_view()

@@ -17,7 +17,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data-dir', default='data_dir')
   parser.add_argument('--embeddings-type', default='elmo', choices=['elmo', 'bert'])
-  parser.add_argument('--model-path', default='sentences_embeddings_plots/plot_model.h5')
+  parser.add_argument('--model-path', default='plots/plot_model.h5')
   args = parser.parse_args()
 
   embeddings_dict = load_embeddings_dict(join(args.data_dir, '%s_dict.pkl' % args.embeddings_type))

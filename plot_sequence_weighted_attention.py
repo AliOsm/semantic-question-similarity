@@ -19,7 +19,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--data-dir', default='data_dir')
   parser.add_argument('--embeddings-type', default='elmo', choices=['elmo', 'bert'])
-  parser.add_argument('--model-path', default='sentences_embeddings_plots/plot_model.h5')
+  parser.add_argument('--model-path', default='plots/plot_model.h5')
   args = parser.parse_args()
 
   sentences = [
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     sentence = list(reversed(sentence.split()))
     ax.set_xticklabels(
       ['', '<end>'] + [get_display(arabic_reshaper.reshape(word)) for word in sentence] + ['<start>'],
-      fontdict={'fontsize': 14},
+      fontdict={'fontsize': 22},
       rotation=0
     )
 
