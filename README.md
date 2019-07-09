@@ -2,14 +2,14 @@
 
 Official implementation of: [Semantic Text Similarity Using Squared Distance Contextual Ordered Neurons LSTM With Weighted Attention](paper-url)
 
-Note: All codes and scripts in this repository tested on Ubuntu 18.04 LTS.
+**Note: All codes and scripts in this repository tested on Ubuntu 18.04 LTS.**
 
 ## 0. Prerequisites
 - Python 3.6.8
 - Packages listed in `requirements.txt` file
 - To use ELMo embeddings:
-	- Clone this repository: https://github.com/HIT-SCIR/ELMoForManyLangs
-	- Inside the folder of the cloned repository, run the following command: `python setup.py install`
+  - Clone this repository: https://github.com/HIT-SCIR/ELMoForManyLangs
+  - Inside the folder of the cloned repository, run the following command: `python setup.py install`
   - Download and unzip the Arabic ELMo pre-trained model from: https://github.com/HIT-SCIR/ELMoForManyLangs into `elmo_dir` folder
   - Download this file: https://github.com/HIT-SCIR/ELMoForManyLangs/blob/master/configs/cnn_50_100_512_4096_sample.json and save it in `elmo_dir` folder
 
@@ -21,7 +21,7 @@ python 1_preprocess.py --dataset-split test
 ```
 
 ## 2. Data Enlarging
-To enlarge the data using the graph connected components extracted from the training data run the following command:
+To enlarge the data using the trnasitive property extracted from the training data run the following command:
 ```
 python 2_enlarge.py
 ```
@@ -45,7 +45,7 @@ To start training the model run the following command:
 ```
 python 4_train.py --embeddings-type elmo --dropout-rate 0.2 --epochs 100 --batch-size 256 --dev-split 2000
 ```
-You can use the command-line arguments to change the training hyperparameters, for example you can set `--embeddings-type` to `bert` to train the model using *BERT* embeddings.
+You can use the command-line arguments to change the training hyperparameters. For example, you can set `--embeddings-type` to `bert` to train the model using *BERT* embeddings.
 
 ## 5. Model Inferencing
 To inference the model and predict the test set run the following command:
