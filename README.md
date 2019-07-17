@@ -1,6 +1,6 @@
 # mawdoo3-task
 
-Official implementation of: [Semantic Text Similarity Using Squared Distance Contextual Ordered Neurons LSTM With Weighted Attention](paper-url)
+Official implementation of: [Tha3aroon at NSURL-2019 Task 8: Semantic Question Similarity in Arabic](paper-url)
 
 **Note: All codes and scripts in this repository tested on Ubuntu 18.04 LTS.**
 
