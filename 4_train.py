@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
   if args.initial_epoch == 0:
     model = build_model(
-      len(embeddings_dict[list(embeddings_dict)[0]][0]),
+      len(embeddings_dict[list(embeddings_dict)[0]][0])
     )
   else:
     model = load_model(
