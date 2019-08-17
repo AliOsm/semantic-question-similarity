@@ -1,4 +1,4 @@
-# mawdoo3-task
+# Semantic-Question-Similarity
 
 Official implementation of: [Tha3aroon at NSURL-2019 Task 8: Semantic Question Similarity in Arabic](paper-url)
 
