@@ -55,7 +55,9 @@ You can set the `--model-path` to any path pointing to a model checkpoint. This 
 ## Model Structure
 
 The following figure shows the model structure in a clearer way.
-![model-structure](plots/model_representation.png)
+<p align="center">
+  <img src="plots/model_representation.png">
+</p>
 
 #### Note: All codes in this repository tested on [Ubuntu 18.04](http://releases.ubuntu.com/18.04)
 
