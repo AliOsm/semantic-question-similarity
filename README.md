@@ -2,8 +2,6 @@
 
 Official implementation of: [Tha3aroon at NSURL-2019 Task 8: Semantic Question Similarity in Arabic](paper-url)
 
-**Note: All codes and scripts in this repository tested on Ubuntu 18.04 LTS.**
-
 ## 0. Prerequisites
 - Python 3.6.8
 - Packages listed in `requirements.txt` file
@@ -58,3 +56,13 @@ You can set the `--model-path` to any path pointing to a model checkpoint. This 
 
 The following figure shows the model structure in a clearer way.
 ![model-structure](plots/model_representation.png)
+
+#### Note: All codes in this repository tested on [Ubuntu 18.04](http://releases.ubuntu.com/18.04)
+
+## Contributors
+1. [Ali Hamdi Ali Fadel](https://github.com/AliOsm).<br/>
+2. [Ibraheem Tuffaha](https://github.com/IbraheemTuffaha).<br/>
+3. [Mahmoud Al-Ayyoub](https://github.com/malayyoub).<br/>
+
+## License
+The project is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
