@@ -1,3 +1,5 @@
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/tha3aroon-at-nsurl-2019-task-8-semantic/question-similarity-on-q2q-arabic-benchmark)](https://paperswithcode.com/sota/question-similarity-on-q2q-arabic-benchmark?p=tha3aroon-at-nsurl-2019-task-8-semantic)
+
 # Semantic-Question-Similarity
 
 The official implementation of our paper: [Tha3aroon at NSURL-2019 Task 8: Semantic Question Similarity in Arabic](https://arxiv.org/abs/1912.12514), which was part of [NSURL-2019](http://nsurl.org/tasks/task8-semantic-question-similarity-in-arabic/) workshop on [Task 8](https://www.kaggle.com/c/nsurl-2019-task8) for Arabic Semantic Question Similarity.
