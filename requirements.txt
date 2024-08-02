@@ -1,6 +1,6 @@
 arabic-reshaper==2.0.15
 bert-embedding==1.0.1
-Keras==2.2.4
+Keras==2.13.1
 keras-ordered-neurons==0.8.0
 keras-self-attention==0.41.0
 matplotlib==2.2.3
